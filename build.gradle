@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'application'
+}
+javafx {
+    version="21"
+    modules = [ 'javafx.controls', 'javafx.fxml'  ]
+}
+group = 'ro.mpp'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+application{
+    mainClass='ro.mpp.Main'
+}
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.asynchttpclient:async-http-client:3.0.0.Beta3'
+    implementation 'de.sfuhrm:radiobrowser4j:3.0.0'
+    implementation group: 'org.json', name: 'json', version: '20231013'
+    implementation group: 'javazoom', name: 'jlayer', version: '1.0.1'
+    implementation group: 'com.google.maps', name: 'google-maps-services', version: '2.2.0'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
+    implementation group: 'org.openjfx', name: 'javafx-swing', version: '11-ea+24'
+
+}
+jar{
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes('Main-Class':'ro.mpp.Main')
+    }
+    from{
+        configurations.runtimeClasspath.collect{
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+test {
+    useJUnitPlatform()
+}
