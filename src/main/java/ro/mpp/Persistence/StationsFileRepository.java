@@ -76,15 +76,6 @@ public class StationsFileRepository extends FileRepository<UUID, Station> {
         }
     }
 
-
-    public Boolean addFavourite(Station entity) {
-        return null;
-    }
-
-    public Boolean deleteFavourite(Station entity) {
-        return null;
-    }
-
     @Override
     public List<Station> getAll() {
         return new ArrayList<>(entities.values());

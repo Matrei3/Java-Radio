@@ -2,6 +2,10 @@ package ro.mpp.Domain;
 
 import de.sfuhrm.radiobrowser4j.Station;
 
+/**
+ * Mockingly extends de.sfuhrm.radiobrowser4j.Station since
+ * it's a final class and adds state short and long name
+ */
 public class ExtendedStation {
     private Station station;
     private String longName;

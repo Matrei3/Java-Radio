@@ -76,6 +76,7 @@ public class JukeboxController {
         fav.setFitWidth(30);
         fav.setFitHeight(30);
         favButton.setGraphic(img);
+
         stationTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 nameLabel.setVisible(true);
@@ -113,10 +114,10 @@ public class JukeboxController {
         favouritesList.setItems(modelFavourites);
 
     }
+
     @FXML
     public void pressPlay() {
         Stage stage = (Stage) stationTableView.getScene().getWindow();
-
         stage.setOnCloseRequest(e -> pressStop());
         String streamUrl = stationTableView.getSelectionModel().getSelectedItem().getStation().getUrl();
         if (inputStream != null && connection != null) {
@@ -183,16 +184,33 @@ public class JukeboxController {
         loadFavStations();
     }
 
-    public void deleteFav(ActionEvent event) {
-        ExtendedStation favStation = favouritesList.getSelectionModel().getSelectedItem();
-        if (favStation == null) {
+    public void playFavourite(ActionEvent event) {
+        Stage stage = (Stage) stationTableView.getScene().getWindow();
+        stage.setOnCloseRequest(e -> pressStop());
+        ExtendedStation station = favouritesList.getSelectionModel().getSelectedItem();
+        if(connection!=null && station!=null)
+            pressStop();
+        if (station != null) {
+            Thread playerThread = new Thread(() -> {
+                try {
+                    URL url = new URL(station.getStation().getUrl());
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.connect();
+                    inputStream = new BufferedInputStream(connection.getInputStream());
+                    player = new Player(inputStream);
+                    player.play();
+
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            });
+            playerThread.start();
+        } else {
             errorLabel.setVisible(true);
             PauseTransition pauseTransition = new PauseTransition(Duration.seconds(2));
             pauseTransition.setOnFinished(e -> errorLabel.setVisible(false));
             pauseTransition.play();
-            return;
         }
-        favRepository.delete(favStation);
-        loadFavStations();
     }
 }
+

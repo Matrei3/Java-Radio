@@ -1,4 +1,4 @@
-package ro.mpp;
+package ro.mpp.Utils;
 
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;

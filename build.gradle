@@ -9,12 +9,26 @@ javafx {
 }
 group = 'ro.mpp'
 version = '1.0-SNAPSHOT'
+tasks.register('createJar', Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                'Main-Class': 'ro.mpp.StartApplication'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    from sourceSets.main.resources
+    with jar
+}
+
 
 repositories {
     mavenCentral()
 }
 application{
-    mainClass='ro.mpp.Main'
+    mainClass='ro.mpp.StartApplication'
 }
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
@@ -28,17 +42,7 @@ dependencies {
     implementation group: 'org.openjfx', name: 'javafx-swing', version: '11-ea+24'
 
 }
-jar{
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest {
-        attributes('Main-Class':'ro.mpp.Main')
-    }
-    from{
-        configurations.runtimeClasspath.collect{
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-}
+
 test {
     useJUnitPlatform()
 }

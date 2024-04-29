@@ -4,6 +4,7 @@ import de.sfuhrm.radiobrowser4j.Station;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import ro.mpp.Domain.ExtendedStation;
+import ro.mpp.Utils.StationCreator;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,6 +24,9 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
         loadStations();
     }
 
+    /**
+     * Load stations into memory when creating repository
+     */
     @Override
     protected void loadStations() {
         String data;
@@ -33,21 +37,8 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
                 JSONObject jsonObject = new JSONObject(data);
                 JSONArray array = new JSONArray(jsonObject.get("stations").toString());
                 array.forEach(station -> {
-                    String[] parts = station.toString().split(";");
-                    UUID id = UUID.fromString(parts[0]);
-                    String name = parts[1];
-                    String url = parts[2];
-                    List<String> tags = List.of(parts[3].split(","));
-                    String icon = parts[4];
-                    String longName = parts[5];
-                    String shortName = parts[6];
-                    Station createdStation = new Station();
-                    createdStation.setStationUUID(id);
-                    createdStation.setName(name);
-                    createdStation.setUrl(url);
-                    createdStation.setTagList(tags);
-                    createdStation.setFavicon(icon);
-                    ExtendedStation extendedStation = new ExtendedStation(createdStation, longName, shortName);
+                    ExtendedStation extendedStation = StationCreator.createStationFromArrayObject(station);
+                    UUID id = extendedStation.getStation().getStationUUID();
                     entities.put(id, extendedStation);
 
                 });
@@ -57,6 +48,10 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
         }
     }
 
+    /**
+     * No need to bulk add favourite stations
+     * @param entities - list of ExtendedStations to be added to JSON
+     */
     @Override
     public void addAll(List<ExtendedStation> entities) {
 
@@ -67,11 +62,11 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
         return new ArrayList<>(entities.values());
     }
 
-    public Boolean add(ExtendedStation entity) {
+    public void add(ExtendedStation entity) {
         String data;
         JSONObject jsonObject;
         if (entity == null)
-            return false;
+            return;
         try (Stream<String> lines = Files.lines(filePath)) {
             data = lines.collect(Collectors.joining("\n"));
             if (!data.isEmpty()) {
@@ -81,6 +76,7 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
                 else
                     jsonObject.append("stations", String.join(";", entity.getStation().getStationUUID().toString(), entity.getStation().getName(), entity.getStation().getUrl(), entity.getStation().getTags(), entity.getStation().getFavicon(), " ", " "));
             } else {
+                //If it's the first time adding or file is empty we need to create the actual JSON not just append to it
                 jsonObject = new JSONObject();
                 JSONArray jsonArray = new JSONArray();
                 if (entity.getStation().getGeoLongitude() != null && entity.getStation().getGeoLatitude() != null)
@@ -89,19 +85,19 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
                     jsonArray.put(String.join(";", entity.getStation().getStationUUID().toString(), entity.getStation().getName(), entity.getStation().getUrl(), entity.getStation().getTags(), entity.getStation().getFavicon(), " ", " "));
                 jsonObject.put("stations", jsonArray);
             }
+            //For some reason can't be used in the try with resources because lines variable will be empty
             FileWriter fileWriter = new FileWriter(String.valueOf(filePath), false);
             fileWriter.write(jsonObject.toString());
             fileWriter.close();
-            return true;
         } catch (IOException exception) {
-            return false;
+            System.err.println(exception.getMessage());
         } finally {
             loadStations();
         }
 
     }
 
-    public Boolean delete(ExtendedStation entity) {
+    public void delete(ExtendedStation entity) {
         JSONObject jsObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         for (ExtendedStation station : entities.values()) {
@@ -116,10 +112,8 @@ public class FavouriteStationsRepository extends FileRepository<UUID, ExtendedSt
         try (FileWriter fileWriter = new FileWriter(String.valueOf(filePath), false)) {
             fileWriter.write(jsObject.toString());
             entities.remove(entity.getStation().getStationUUID());
-            return true;
         } catch (IOException exception) {
             System.err.println(exception.getMessage());
-            return false;
         }
     }
     public Boolean findOne(ExtendedStation extendedStation){
