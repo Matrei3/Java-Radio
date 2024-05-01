@@ -52,6 +52,10 @@
     -fx-alignment: center;
 
 }
+.list-cell:selected{
+    -fx-background-color: #f8ba5e;
+    -fx-text-fill: #ad1fff;
+}
 .table-row-cell {
     -fx-background-color: #FFDEAD;
     -fx-alignment: center;
